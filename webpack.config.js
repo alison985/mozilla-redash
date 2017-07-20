@@ -14,7 +14,7 @@ var config = {
   },
   output: {
     // path: process.env.NODE_ENV === 'production' ? './dist' : './dev',
-    path: './client/dist',
+    path: path.join(__dirname, 'client', 'dist'),
     filename: '[name].js',
     publicPath: '/'
   },
@@ -24,7 +24,7 @@ var config = {
     new webpack.DefinePlugin({
       ON_TEST: process.env.NODE_ENV === 'test'
     }),
-    new webpack.optimize.DedupePlugin(),
+    // new webpack.optimize.DedupePlugin(),
     new webpack.optimize.CommonsChunkPlugin({
       name: 'vendor',
       minChunks: function (module, count) {
@@ -92,7 +92,7 @@ var config = {
       },
       {
         test: /\.(png|jpe?g|gif|svg)(\?.*)?$/,
-        loader: 'url',
+        loader: 'url-loader',
         query: {
           limit: 10000,
           name: 'img/[name].[hash:7].[ext]'
@@ -100,7 +100,7 @@ var config = {
       },
       {
         test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/,
-        loader: 'url',
+        loader: 'url-loader',
         query: {
           limit: 10000,
           name: 'fonts/[name].[hash:7].[ext]'
