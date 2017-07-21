@@ -24,6 +24,12 @@ def get_google_auth_url(next_path):
         google_auth_url = url_for('google_oauth.authorize', next=next_path)
     return google_auth_url
 
+def get_auth0_auth_url(next_path):
+    if settings.MULTI_ORG:
+        auth0_auth_url = url_for('auth0_oauth.authorize_org', next=next_path, org_slug=current_org.slug)
+    else:
+        auth0_auth_url = url_for('auth0_oauth.authorize', next=next_path)
+    return auth0_auth_url
 
 def render_token_login_page(template, org_slug, token):
     try:
@@ -55,11 +61,15 @@ def render_token_login_page(template, org_slug, token):
             login_user(user)
             models.db.session.commit()
             return redirect(url_for('redash.index', org_slug=org_slug))
+
+    auth0_auth_url = ''
+    google_auth_url = ''
     if settings.GOOGLE_OAUTH_ENABLED:
         google_auth_url = get_google_auth_url(url_for('redash.index', org_slug=org_slug))
-    else:
-        google_auth_url = ''
-    return render_template(template, google_auth_url=google_auth_url, user=user), status_code
+    elif settings.AUTH0_ENABLED:
+        auth0_auth_url = get_auth0_auth_url(url_for('redash.index', org_slug=org_slug))
+    return render_template(template, google_auth_url=google_auth_url, 
+        auth0_auth_url=auth0_auth_url, user=user), status_code
 
 
 @routes.route(org_scoped_rule('/invite/<token>'), methods=['GET', 'POST'])
@@ -127,6 +137,7 @@ def login(org_slug=None):
             flash("Wrong email or password.")
 
     google_auth_url = get_google_auth_url(next_path)
+    auth0_auth_url = get_auth0_auth_url(next_path)
 
     return render_template("login.html",
                            org_slug=org_slug,
@@ -139,6 +150,7 @@ def login(org_slug=None):
                                     'AUTH0_CLIENT_SECRET': settings.AUTH0_CLIENT_SECRET,
                                     'AUTH0_DOMAIN': settings.AUTH0_DOMAIN},
                            google_auth_url=google_auth_url,
+                           auth0_auth_url=auth0_auth_url,
                            show_saml_login=settings.SAML_LOGIN_ENABLED,
                            show_remote_user_login=settings.REMOTE_USER_LOGIN_ENABLED)
 

@@ -1,5 +1,5 @@
 from functools import wraps
-from urllib.parse import urlparse
+#from urllib.parse import urlparse
 #from os import environ as env, path
 import json
 
@@ -16,6 +16,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from redash import models, settings
 from redash.authentication.org_resolving import current_org
+from redash.authentication.google_oauth import create_and_login_user
 
 logger = logging.getLogger('auth0')
 
@@ -39,7 +40,46 @@ def auth0_remote_app():
 
     return oauth.auth0
 
-# Controllers API
+#def get_user_profile(access_token):
+#    headers = {'Authorization': 'OAuth {}'.format(access_token)}
+#    response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers=headers)
+#
+#    if response.status_code == 401:
+#        logger.warning("Failed getting user profile (response code 401).")
+#        return None
+#
+#    return response.json()
+
+def verify_profile(org, profile):
+    if org.is_public:
+        return True
+
+    email = profile['email']
+    domain = email.split('@')[-1]
+
+    if domain in org.google_apps_domains:
+        return True
+
+    if org.has_user(email) == 1:
+        return True
+
+    return False
+
+
+@blueprint.route('/<org_slug>/oauth/auth0', endpoint="authorize_org")
+def org_login(org_slug):
+    session['org_slug'] = current_org.slug
+    return redirect(url_for(".authorize", next=request.args.get('next', None)))
+
+
+@blueprint.route('/oauth/auth0', endpoint="authorize")
+def login():
+    callback = url_for('.callback', _external=True)
+    next_path = request.args.get('next', url_for("redash.index", org_slug=session.get('org_slug')))
+    logger.debug("Callback url: %s", callback)
+    logger.debug("Next is: %s", next_path)
+    return auth0_remote_app().authorize(callback=callback, state=next_path)
+
 
 @blueprint.route('/oauth/auth0_callback', endpoint="callback")
 def authorized():
