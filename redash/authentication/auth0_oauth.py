@@ -5,7 +5,7 @@ import json
 
 from auth0.v3.authentication import GetToken
 from auth0.v3.authentication import Users
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 import logging
 import requests
@@ -18,27 +18,27 @@ from redash import models, settings
 from redash.authentication.org_resolving import current_org
 from redash.authentication.google_oauth import create_and_login_user
 
-logger = logging.getLogger('auth0')
+logger = logging.getLogger('auth0_oauth')
 
 oauth = OAuth()
-blueprint = Blueprint('auth0', __name__)
+blueprint = Blueprint('auth0_oauth', __name__)
 
 def auth0_remote_app():
-    if 'auth0' not in oauth.remote_apps:
-        oauth.remote_app('auth0',
-                         #base_url='https://www.google.com/accounts/',
-                         #authorize_url='https://accounts.google.com/o/oauth2/auth',
+    if 'auth0_oauth' not in oauth.remote_apps:
+        oauth.remote_app('auth0_oauth',
+                         base_url=settings.AUTH0_CALLBACK_URL,
+                         authorize_url=settings.AUTH0_CALLBACK_URL,
                          #request_token_url=None,
                          #request_token_params={
                          #    'scope': 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
                          #},
-                         #access_token_url='https://accounts.google.com/o/oauth2/token',
+                         access_token_url=settings.AUTH0_DOMAIN,
                          access_token_method='POST',
-                         #consumer_key=settings.GOOGLE_CLIENT_ID,
-                         #consumer_secret=settings.GOOGLE_CLIENT_SECRET
+                         consumer_key=settings.AUTH0_CLIENT_ID,
+                         consumer_secret=settings.AUTH0_CLIENT_SECRET
                          )
 
-    return oauth.auth0
+    return oauth.auth0_oauth
 
 #def get_user_profile(access_token):
 #    headers = {'Authorization': 'OAuth {}'.format(access_token)}
@@ -57,8 +57,8 @@ def verify_profile(org, profile):
     email = profile['email']
     domain = email.split('@')[-1]
 
-    if domain in org.google_apps_domains:
-        return True
+    #if domain in org.google_apps_domains:
+    #    return True
 
     if org.has_user(email) == 1:
         return True
