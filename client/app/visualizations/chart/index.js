@@ -207,13 +207,70 @@ function ChartEditor(ColorPalette, clientConfig) {
       scope.$watchCollection('form.yAxisColumns', (value, old) => {
         each(old, unsetColumn);
         each(value, partial(setColumnRole, 'y'));
+
+        if (scope.options.columnMapping !== undefined && scope.options.columnMapping !== {}) {
+          const chartData = scope.queryResult.getChartData(scope.options.columnMapping);
+          // console.log(chartData);
+
+          if (chartData !== []) {
+            if (chartData[0] !== undefined) {
+              const yColumns = [];
+              for (let i = 0; i < chartData[0].data.length; i += i + 1) {
+                yColumns.push(chartData[0].data[i].y);
+              }
+
+              // if (yColumns !== []) {
+              if ((JSON.stringify(yColumns).includes(':') // is time OR
+                  || JSON.stringify(yColumns).includes('/')) // is date
+                  && !JSON.stringify(yColumns).match(/[a-z]/i) // alpha char NOT found
+                  ) {
+                scope.options.yAxis.type = 'Datetime';
+              }
+
+              if (JSON.stringify(yColumns).match(/^\d+$/)) {
+                scope.options.yAxis.type = 'Linear';
+              }
+              // }
+            }
+          }
+        }
       });
 
       scope.$watch('form.xAxisColumn', (value, old) => {
         if (old !== undefined) {
           unsetColumn(old);
         }
-        if (value !== undefined) { setColumnRole('x', value); }
+        if (value !== undefined) {
+          setColumnRole('x', value);
+        }
+
+        const chartDataA = scope.queryResult.getData();
+
+        if (chartDataA !== []) {
+          if (chartDataA[0] !== undefined) {
+            if (chartDataA[0].data !== undefined) {
+              const xColumns = [];
+              for (let i = 0; i < chartDataA[0].data.length; i += i + 1) {
+                console.log(chartDataA[0].data[i].key());
+                xColumns.push(chartDataA[0].data[i].x);
+              }
+
+              console.log(JSON.stringify(xColumns));
+              // if (xColumns !== []) {
+              if (!JSON.stringify(xColumns).includes(':') // is not time
+                  && !JSON.stringify(xColumns).includes('/') // is not date
+                  && JSON.stringify(xColumns).match(/[a-z]/i) // alpha characters found
+                  ) {
+                scope.options.xAxis.type = 'Category';
+              }
+
+              if (JSON.stringify(xColumns).match(/^\d+$/)) {
+                scope.options.xAxis.type = 'Linear';
+              }
+              // }
+            }
+          }
+        }
       });
 
       scope.$watch('form.errorColumn', (value, old) => {
