@@ -34,6 +34,10 @@ function ChartRenderer() {
         $scope.plotlyOptions = $scope.options;
       }
 
+      $scope.reloadChartFx = () => {
+        reloadChart();
+      };
+
       $scope.$watch('options', reloadChart, true);
       $scope.$watch('queryResult && queryResult.getData()', reloadData);
     },
@@ -80,6 +84,7 @@ function ChartEditor(ColorPalette, clientConfig) {
       scope.yAxisScales = ['linear', 'logarithmic', 'datetime'];
 
       scope.chartTypeChanged = () => {
+        console.log('chartTypeChanged');
         keys(scope.options.seriesOptions).forEach((key) => {
           scope.options.seriesOptions[key].type = scope.options.globalSeriesType;
         });
@@ -93,6 +98,7 @@ function ChartEditor(ColorPalette, clientConfig) {
 // Plotly examples and docs: https://plot.ly/javascript/`;
 
       function refreshColumns() {
+        console.log('refreshColumns');
         scope.columns = scope.queryResult.getColumns();
         scope.columnNames = pluck(scope.columns, 'name');
         if (scope.columnNames.length > 0) {
@@ -103,6 +109,7 @@ function ChartEditor(ColorPalette, clientConfig) {
       }
 
       function refreshColumnsAndForm() {
+        console.log('refreshColumnsAndForm');
         refreshColumns();
         if (!scope.queryResult.getData() ||
             scope.queryResult.getData().length === 0 ||
@@ -119,6 +126,7 @@ function ChartEditor(ColorPalette, clientConfig) {
       }
 
       function refreshSeries() {
+        console.log('refreshSeries');
         // for pie charts only get color list (x row) instead of series list (y column)
         if (scope.options.globalSeriesType === 'pie') {
           const seriesData = scope.queryResult.getData();
@@ -146,6 +154,8 @@ function ChartEditor(ColorPalette, clientConfig) {
             delete scope.options.colorOptions[name];
           });
         } else {
+          // console.log("refreshSeries");
+          // console.log(scope.options);
           const seriesNames = pluck(scope.queryResult.getChartData(scope.options.columnMapping), 'name');
           const existing = keys(scope.options.seriesOptions);
           each(difference(seriesNames, existing), (name) => {
@@ -159,6 +169,7 @@ function ChartEditor(ColorPalette, clientConfig) {
             scope.form.seriesList = without(scope.form.seriesList, name);
             delete scope.options.seriesOptions[name];
           });
+          // console.log(scope.options);
         }
       }
 
@@ -197,14 +208,44 @@ function ChartEditor(ColorPalette, clientConfig) {
         ),
       };
 
-      scope.$watchCollection('form.seriesList', (value) => {
+/*
+      function zIndexCompare(series) {
+        if (scope.options.seriesOptions[series.name]) {
+          return scope.options.seriesOptions[series.name].zIndex;
+        }
+        return 0;
+      } */
+
+      scope.$watchCollection('form.seriesList', (value, old) => {
+        console.log('form.seriesList');
+        console.log(old);
+        console.log(value);
+        // console.log(scope.chartSeries);
+        // console.log(scope.layout);
+        // each(old, (name, index) => {
+        //   delete scope.options.seriesOptions[name];
+        // });
         each(value, (name, index) => {
           scope.options.seriesOptions[name].zIndex = index;
           scope.options.seriesOptions[name].index = 0; // is this needed?
         });
+        // reloadData
+        /* if (!isUndefined(scope.queryResult) && scope.queryResult.getData()) {
+          const data = scope.queryResult.getChartData(scope.options.columnMapping);
+          scope.chartSeries = sortBy(data, zIndexCompare);
+        }
+        // reloadChart */
+        // scope.plotlyOptions = scope.options;
+        // refreshColumns();
+        // refreshSeries();
+        // scope.reloadChartFx;
+        // console.log(scope.options.seriesOptions);
+        // console.log(scope.layout);
+        // console.log(scope.form);
       });
 
       scope.$watchCollection('form.yAxisColumns', (value, old) => {
+        console.log('form.yAxisColumns');
         each(old, unsetColumn);
         each(value, partial(setColumnRole, 'y'));
       });
@@ -261,6 +302,8 @@ function ChartEditor(ColorPalette, clientConfig) {
             scope.form.xAxisColumn = key;
           } else if (value === 'y') {
             scope.form.yAxisColumns.push(key);
+            console.log('push yAxis');
+            console.log(scope.form.yAxisColumns);
           } else if (value === 'series') {
             scope.form.groupby = key;
           } else if (value === 'yError') {

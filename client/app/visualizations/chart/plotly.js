@@ -349,6 +349,9 @@ const PlotlyChart = () => {
           if (!plotlySeries.error_y.length) {
             delete plotlySeries.error_y.length;
           }
+          /* if (!plotlySeries.y.length) {
+            delete plotlySeries.y.length;
+          } */
 
           if (seriesOptions.type === 'bubble') {
             plotlySeries.marker = {
