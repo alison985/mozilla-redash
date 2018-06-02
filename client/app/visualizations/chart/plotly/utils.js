@@ -239,26 +239,31 @@ function prepareChartData(seriesList, options) {
     const xValues = [];
     const yValues = [];
     const yErrorValues = [];
+    const hoverText = [];
     each(data, (row) => {
       const x = truncateCategoryAxis(normalizeValue(row.x), options);
       const y = normalizeValue(row.y);
       const yError = normalizeValue(row.yError);
+      const text = row.name;
       sourceData.set(x, {
         x,
         y,
         yError,
         yPercent: null, // will be updated later
+        text,
       });
       xValues.push(x);
       yValues.push(y);
       yErrorValues.push(yError);
+      hoverText.push(text);
     });
 
     const plotlySeries = {
       visible: true,
-      hoverinfo: 'x+text+name',
+      // hoverinfo: 'x+text+name',
       x: xValues,
       y: yValues,
+      hoverinfo: hoverText,
       error_y: {
         array: yErrorValues,
         color: seriesColor,
