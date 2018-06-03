@@ -240,22 +240,26 @@ function prepareChartData(seriesList, options) {
     const yValues = [];
     const yErrorValues = [];
     const hoverText = [];
+    const hoverLabel = [];
     each(data, (row) => {
       const x = truncateCategoryAxis(normalizeValue(row.x), options);
       const y = normalizeValue(row.y);
       const yError = normalizeValue(row.yError);
       const text = row.name;
+      const label = options.seriesOptions[name].name;
       sourceData.set(x, {
         x,
         y,
         yError,
         yPercent: null, // will be updated later
         text,
+        label,
       });
       xValues.push(x);
       yValues.push(y);
       yErrorValues.push(yError);
       hoverText.push(text);
+      hoverLabel.push(label);
     });
 
     const plotlySeries = {
@@ -263,7 +267,9 @@ function prepareChartData(seriesList, options) {
       // hoverinfo: 'x+text+name',
       x: xValues,
       y: yValues,
-      hoverinfo: hoverText,
+      hoverinfo: hoverLabel,
+      text: hoverText,
+      hovertext: hoverText,
       error_y: {
         array: yErrorValues,
         color: seriesColor,
